@@ -2,8 +2,20 @@ h1 {
   text-align: center;
 }
 
-.inputs, .equations {
+.inputs, .equations, .convert {
   margin-left: 2vw;
+}
+
+.convert {
+  padding: 5px 10px;
+  margin-top: 50px;
+
+  select { 
+    margin-left: 10px;
+  }
+  input {
+    padding: 5px 10px;
+  }
 }
 
 .equations {

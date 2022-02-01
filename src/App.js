@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './App.scss';
 
 const isValidFloat = (str) => {
@@ -6,13 +6,20 @@ const isValidFloat = (str) => {
   return str.length === 0 || floatRegex.test(str);
 }
 
+const nauticalMilesConversionRatio = 1852;
+const feetConversionRatio = 3.28084;
+
 function App() {
   const [yieldVal, setYieldVal] = useState('');
   const [cep, setCep] = useState('');
   const [reliability, setReliability] = useState('');
   const [yieldUnit, setYieldUnit] = useState('mt');
   const [bias, setBias] = useState('');
-  const [hardness, setHardness] = useState('')
+  const [hardness, setHardness] = useState('');
+  const [conversionInput, setConversionInput] = useState('');
+  const [conversionOutput, setConversionOutput] = useState('');
+  const [inputUnit, setInputUnit] = useState('nm');
+  const [outputUnit, setOutputUnit] = useState('nm');
 
   const onChange = (e, setter) => {
     if (isValidFloat(e.target.value)) {
@@ -22,15 +29,26 @@ function App() {
 
   const scaledYieldVal = yieldUnit === 'mt' ? yieldVal : yieldVal / 1000;
   const nmLethalRadius = (yieldVal && hardness) ? 2.62 * (Math.pow(scaledYieldVal, 1/3)/Math.pow(hardness, 1/3)) : undefined;
-  const mLethalRadius = nmLethalRadius ? nmLethalRadius * 1852 : undefined;
+  const mLethalRadius = nmLethalRadius ? nmLethalRadius * nauticalMilesConversionRatio : undefined;
   const cepEffective = bias ? Math.pow(Math.pow(cep, 2) + Math.pow(bias, 2), 1/2) : undefined;
   const cepActual = cepEffective || cep;
   const sskp = mLethalRadius && cepActual ? 1 - Math.pow(0.5, Math.pow(mLethalRadius/(cepActual), 2)) : undefined;
   const tkp = sskp && reliability ? sskp * (reliability/100) : undefined;
 
+  useEffect(() => {
+    if (inputUnit === outputUnit) setConversionOutput(conversionInput);
+    else if (inputUnit === 'nm' && outputUnit === 'm') setConversionOutput(conversionInput*nauticalMilesConversionRatio);
+    else if (inputUnit === 'm' && outputUnit === 'nm') setConversionOutput(conversionInput/nauticalMilesConversionRatio);
+    else if (inputUnit === 'm' && outputUnit === 'ft') setConversionOutput(conversionInput*feetConversionRatio);
+    else if (inputUnit === 'ft' && outputUnit === 'm') setConversionOutput(conversionInput/feetConversionRatio);
+    else if (inputUnit === 'nm' && outputUnit === 'ft') setConversionOutput(conversionInput*nauticalMilesConversionRatio*feetConversionRatio);
+    else if (inputUnit === 'ft' && outputUnit === 'nm') setConversionOutput(conversionInput/nauticalMilesConversionRatio/feetConversionRatio);
+    else setConversionOutput('');
+  }, [conversionInput, inputUnit, outputUnit])
+
   return (
     <div className="App">
-      <h1>Nuclear Weapons Survival Tool</h1>
+      <h1>Nuclear Weapons Survival Toolkit</h1>
 
       <div className="inputs">
         <div className="input-container">
@@ -83,6 +101,26 @@ function App() {
         <div className="equation">
           TKP = SSKP * reliability = {(sskp && reliability) && `${sskp} * ${reliability/100} = ${tkp}`}
           <span style={{fontWeight: 700}}>{(sskp && reliability) && ` ≈ ${(tkp*100).toFixed(2)}%`}</span>
+        </div>
+      </div>
+
+      <div className="convert">
+        <h2>Convert</h2>
+        <div>
+          <input type="text" value={conversionInput} onChange={(e) => onChange(e, setConversionInput)}></input>
+          <select value={inputUnit} onChange={(e) => setInputUnit(e.target.value)}>
+            <option value="nm">nautical miles</option>
+            <option value="m">meters</option>
+            <option value="ft">feet</option>
+          </select>
+        </div>
+        <div>
+          <input type="text" value={conversionOutput} readOnly></input>
+          <select value={outputUnit} onChange={(e) => setOutputUnit(e.target.value)}>
+            <option value="nm">nautical miles</option>
+            <option value="m">meters</option>
+            <option value="ft">feet</option>
+          </select>
         </div>
       </div>
     </div>
