@@ -23,7 +23,9 @@ function App() {
   const scaledYieldVal = yieldUnit === 'mt' ? yieldVal : yieldVal / 1000;
   const nmLethalRadius = (yieldVal && hardness) ? 2.62 * (Math.pow(scaledYieldVal, 1/3)/Math.pow(hardness, 1/3)) : undefined;
   const mLethalRadius = nmLethalRadius ? nmLethalRadius * 1852 : undefined;
-  const sskp = mLethalRadius && cep ? 1 - Math.pow(0.5, Math.pow(mLethalRadius/cep, 2)) : undefined;
+  const cepEffective = bias ? Math.pow(Math.pow(cep, 2) + Math.pow(bias, 2), 1/2) : undefined;
+  const cepActual = cepEffective || cep;
+  const sskp = mLethalRadius && cepActual ? 1 - Math.pow(0.5, Math.pow(mLethalRadius/(cepActual), 2)) : undefined;
   const tkp = sskp && reliability ? sskp * (reliability/100) : undefined;
 
   return (
@@ -69,13 +71,18 @@ function App() {
         </div>
 
         <div className="equation">
-          SSKP = 1 - 0.5^((LR / CEP)^2) = {(mLethalRadius && cep) && `1 - 0.5^((${mLethalRadius} / ${cep})^2) = 1 - 0.5^(${Math.pow(mLethalRadius/cep, 2)}) = 1 - ${Math.pow(0.5, Math.pow(mLethalRadius/cep, 2))} = ${sskp}`}
-          <span style={{fontWeight: 700}}>{` ≈ ${(sskp*100).toFixed(2)}%`}</span>
+          CEP effective = (CEP^2 + B^2)^(1/2) = {cep && (bias ? `(${cep}^2 + ${bias}^2)^(1/2) = (${Math.pow(cep, 2) + Math.pow(bias, 2)})^1/2 = ` : `(${cep}^2 + 0^2)^(1/2) = `)}
+          <span style={{fontWeight: 700}}>{cep && (bias ? `${cepEffective} m` : `${cep} m`)}</span>
+        </div>
+
+        <div className="equation">
+          SSKP = 1 - 0.5^((LR / CEP)^2) = {(mLethalRadius && cepActual) && `1 - 0.5^((${mLethalRadius} / ${cepActual})^2) = 1 - 0.5^(${Math.pow(mLethalRadius/cepActual, 2)}) = 1 - ${Math.pow(0.5, Math.pow(mLethalRadius/cepActual, 2))} = ${sskp}`}
+          <span style={{fontWeight: 700}}>{(mLethalRadius && cepActual) && ` ≈ ${(sskp*100).toFixed(2)}%`}</span>
         </div>
 
         <div className="equation">
           TKP = SSKP * reliability = {(sskp && reliability) && `${sskp} * ${reliability/100} = ${tkp}`}
-          <span style={{fontWeight: 700}}>{` ≈ ${(tkp*100).toFixed(2)}%`}</span>
+          <span style={{fontWeight: 700}}>{(sskp && reliability) && ` ≈ ${(tkp*100).toFixed(2)}%`}</span>
         </div>
       </div>
     </div>
