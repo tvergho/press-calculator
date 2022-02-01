@@ -20,6 +20,12 @@ function App() {
     }
   }
 
+  const scaledYieldVal = yieldUnit === 'mt' ? yieldVal : yieldVal / 1000;
+  const nmLethalRadius = (yieldVal && hardness) ? 2.62 * (Math.pow(scaledYieldVal, 1/3)/Math.pow(hardness, 1/3)) : undefined;
+  const mLethalRadius = nmLethalRadius ? nmLethalRadius * 1852 : undefined;
+  const sskp = mLethalRadius && cep ? 1 - Math.pow(0.5, Math.pow(mLethalRadius/cep, 2)) : undefined;
+  const tkp = sskp && reliability ? sskp * (reliability/100) : undefined;
+
   return (
     <div className="App">
       <h1>Nuclear Weapons Survival Tool</h1>
@@ -52,6 +58,24 @@ function App() {
         <div className="input-container">
           <label>Bias (B)</label>
           <div className="input"><input type="text" value={bias} onChange={(e) => onChange(e, setBias)} /> <div className="unit">m</div></div>
+        </div>
+      </div>
+
+      <div className="equations">
+        <div className="equation">
+          LR = 2.62 * (Y^(1/3) / H^(1/3)) = {(yieldVal && hardness) ? `2.62 * (${scaledYieldVal}^(1/3) / ${hardness}^(1/3)) = 2.62 * (${Math.pow(scaledYieldVal, 1/3)} / ${Math.pow(hardness, 1/3)}) = ${2.62} * ${Math.pow(scaledYieldVal, 1/3)/Math.pow(hardness, 1/3)} = ${2.62 * (Math.pow(scaledYieldVal, 1/3)/Math.pow(hardness, 1/3))} ≈ ` : ''}
+          <span style={{fontWeight: 700}}>{(yieldVal && hardness) && `${(nmLethalRadius).toFixed(2)} nautical miles`}</span>
+          <span style={{fontWeight: 700}}>{(yieldVal && hardness) && ` = ${mLethalRadius} meters`}</span>
+        </div>
+
+        <div className="equation">
+          SSKP = 1 - 0.5^((LR / CEP)^2) = {(mLethalRadius && cep) && `1 - 0.5^((${mLethalRadius} / ${cep})^2) = 1 - 0.5^(${Math.pow(mLethalRadius/cep, 2)}) = 1 - ${Math.pow(0.5, Math.pow(mLethalRadius/cep, 2))} = ${sskp}`}
+          <span style={{fontWeight: 700}}>{` ≈ ${(sskp*100).toFixed(2)}%`}</span>
+        </div>
+
+        <div className="equation">
+          TKP = SSKP * reliability = {(sskp && reliability) && `${sskp} * ${reliability/100} = ${tkp}`}
+          <span style={{fontWeight: 700}}>{` ≈ ${(tkp*100).toFixed(2)}%`}</span>
         </div>
       </div>
     </div>
