@@ -1,0 +1,32 @@
+h1 {
+  text-align: center;
+}
+
+.inputs {
+  margin-left: 2vw;
+}
+
+.input-container {
+  width: 400px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 10px;
+
+  .unit {
+    width: 100px;
+    margin-left: 10px;
+  }
+  .input {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+  input {
+    padding: 5px 10px;
+  }
+  label {
+    font-weight: 500;
+  }
+}
