@@ -16,11 +16,16 @@ function App() {
   const [yieldUnit, setYieldUnit] = useState('mt');
   const [bias, setBias] = useState('');
   const [hardness, setHardness] = useState('');
+
   const [conversionInput, setConversionInput] = useState('');
   const [conversionOutput, setConversionOutput] = useState('');
   const [inputUnit, setInputUnit] = useState('nm');
   const [outputUnit, setOutputUnit] = useState('nm');
+
   const [numPerTarget, setNumPerTarget] = useState('');
+
+  const [heightOfBurst, setHeightOfBurst] = useState('');
+  const [distanceFromGroundZero, setDistanceFromGroundZero] = useState('');
 
   const onChange = (e, setter) => {
     if (isValidFloat(e.target.value)) {
@@ -29,6 +34,7 @@ function App() {
   }
 
   const scaledYieldVal = yieldUnit === 'mt' ? yieldVal : yieldVal / 1000;
+  const ktYieldVal = yieldUnit === 'kt' ? yieldVal : yieldVal * 1000;
   const nmLethalRadius = (yieldVal && hardness) ? 2.62 * (Math.pow(scaledYieldVal, 1/3)/Math.pow(hardness, 1/3)) : undefined;
   const mLethalRadius = nmLethalRadius ? nmLethalRadius * nauticalMilesConversionRatio : undefined;
   const cepEffective = bias ? Math.pow(Math.pow(cep, 2) + Math.pow(bias, 2), 1/2) : undefined;
@@ -36,6 +42,7 @@ function App() {
   const sskp = mLethalRadius && cepActual ? 1 - Math.pow(0.5, Math.pow(mLethalRadius/(cepActual), 2)) : undefined;
   const tkp = sskp && reliability ? sskp * (reliability/100) : undefined;
   const tkpN = numPerTarget ? 1 - Math.pow((1-tkp), numPerTarget) : undefined;
+  const scaledHeightOfBurst = ktYieldVal && heightOfBurst ? heightOfBurst*Math.pow(ktYieldVal, 1/3) : undefined;
 
   useEffect(() => {
     if (inputUnit === outputUnit) setConversionOutput(conversionInput);
@@ -81,10 +88,23 @@ function App() {
           <label>Bias (B)</label>
           <div className="input"><input type="text" value={bias} onChange={(e) => onChange(e, setBias)} /> <div className="unit">m</div></div>
         </div>
+
         <div className="divider" />
+
         <div className="input-container">
           <label>Number of missiles per target (N)</label>
           <div className="input"><input type="text" value={numPerTarget} onChange={(e) => onChange(e, setNumPerTarget)} /> <div className="unit" /></div>
+        </div>
+
+        <div className="divider" />
+
+        <div className="input-container">
+          <label>Height of burst (H<sub>1-kt</sub>)</label>
+          <div className="input"><input type="text" value={heightOfBurst} onChange={(e) => onChange(e, setHeightOfBurst)} /> <div className="unit">ft</div></div>
+        </div>
+        <div className="input-container">
+          <label>Distance from ground zero (D<sub>1-kt</sub>)</label>
+          <div className="input"><input type="text" value={distanceFromGroundZero} onChange={(e) => onChange(e, setDistanceFromGroundZero)} /> <div className="unit">ft</div></div>
         </div>
       </div>
 
@@ -115,6 +135,14 @@ function App() {
           <div className="equation">
             TKP<sub>n</sub> = 1 - p(miss)^n = {`1 - ${1-tkp}^${numPerTarget} = 1 - ${Math.pow(1-tkp, numPerTarget)} = ${tkpN}`}
             <span style={{fontWeight: 700}}>{` ≈ ${(tkpN*100).toFixed(2)}%`}</span>
+          </div>
+        )}
+
+        <div className="divider" />
+        {!!heightOfBurst && !!ktYieldVal && (
+          <div className="equation">
+            H<sub>{ktYieldVal}-kt</sub> = H<sub>1-kt</sub>*{ktYieldVal}^1/3 = {`${heightOfBurst}*${ktYieldVal}^1/3 = ${heightOfBurst} * ${Math.pow(ktYieldVal, 1/3)} = ${scaledHeightOfBurst} ft`}
+            <span style={{fontWeight: 700}}>{` ≈ ${(scaledHeightOfBurst/feetConversionRatio).toFixed(2)} m`}</span>
           </div>
         )}
       </div>
