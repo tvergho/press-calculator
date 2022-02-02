@@ -26,6 +26,7 @@ function App() {
 
   const [heightOfBurst, setHeightOfBurst] = useState('');
   const [distanceFromGroundZero, setDistanceFromGroundZero] = useState('');
+  const [useAirburst, setUseAirburst] = useState(false);
 
   const onChange = (e, setter) => {
     if (isValidFloat(e.target.value)) {
@@ -35,15 +36,18 @@ function App() {
 
   const scaledYieldVal = yieldUnit === 'mt' ? yieldVal : yieldVal / 1000;
   const ktYieldVal = yieldUnit === 'kt' ? yieldVal : yieldVal * 1000;
+  const scaledHeightOfBurst = ktYieldVal && heightOfBurst ? heightOfBurst*Math.pow(ktYieldVal, 1/3) : undefined;
+  const scaledDistanceFromGroundZero = ktYieldVal && distanceFromGroundZero ? distanceFromGroundZero*Math.pow(ktYieldVal, 1/3) : undefined;
+  const mDistanceFromGroundZero = scaledDistanceFromGroundZero ? scaledDistanceFromGroundZero/feetConversionRatio : undefined;
+
   const nmLethalRadius = (yieldVal && hardness) ? 2.62 * (Math.pow(scaledYieldVal, 1/3)/Math.pow(hardness, 1/3)) : undefined;
-  const mLethalRadius = nmLethalRadius ? nmLethalRadius * nauticalMilesConversionRatio : undefined;
-  const cepEffective = bias ? Math.pow(Math.pow(cep, 2) + Math.pow(bias, 2), 1/2) : undefined;
+  const mLethalRadius = useAirburst ? mDistanceFromGroundZero : (nmLethalRadius ? nmLethalRadius * nauticalMilesConversionRatio : undefined);
+
+  const cepEffective = bias && cep ? Math.pow(Math.pow(cep, 2) + Math.pow(bias, 2), 1/2) : undefined;
   const cepActual = cepEffective || cep;
   const sskp = mLethalRadius && cepActual ? 1 - Math.pow(0.5, Math.pow(mLethalRadius/(cepActual), 2)) : undefined;
   const tkp = sskp && reliability ? sskp * (reliability/100) : undefined;
   const tkpN = numPerTarget ? 1 - Math.pow((1-tkp), numPerTarget) : undefined;
-  const scaledHeightOfBurst = ktYieldVal && heightOfBurst ? heightOfBurst*Math.pow(ktYieldVal, 1/3) : undefined;
-  const scaledDistanceFromGroundZero = ktYieldVal && distanceFromGroundZero ? distanceFromGroundZero*Math.pow(ktYieldVal, 1/3) : undefined;
 
   useEffect(() => {
     if (inputUnit === outputUnit) setConversionOutput(conversionInput);
@@ -110,6 +114,8 @@ function App() {
       </div>
 
       <div className="equations">
+        <div className="airburst-check"><input type="checkbox" checked={useAirburst} onChange={(e) => setUseAirburst(e.target.checked)} /><label>Use Airburst Data?</label></div>
+
         <div className="equation">
           LR = 2.62 * (Y^(1/3) / H^(1/3)) = {(yieldVal && hardness) ? `2.62 * (${scaledYieldVal}^(1/3) / ${hardness}^(1/3)) = 2.62 * (${Math.pow(scaledYieldVal, 1/3)} / ${Math.pow(hardness, 1/3)}) = ${2.62} * ${Math.pow(scaledYieldVal, 1/3)/Math.pow(hardness, 1/3)} = ${2.62 * (Math.pow(scaledYieldVal, 1/3)/Math.pow(hardness, 1/3))} ≈ ` : ''}
           <span style={{fontWeight: 700}}>{(yieldVal && hardness) && `${(nmLethalRadius).toFixed(2)} nautical miles`}</span>
