@@ -43,6 +43,7 @@ function App() {
   const tkp = sskp && reliability ? sskp * (reliability/100) : undefined;
   const tkpN = numPerTarget ? 1 - Math.pow((1-tkp), numPerTarget) : undefined;
   const scaledHeightOfBurst = ktYieldVal && heightOfBurst ? heightOfBurst*Math.pow(ktYieldVal, 1/3) : undefined;
+  const scaledDistanceFromGroundZero = ktYieldVal && distanceFromGroundZero ? distanceFromGroundZero*Math.pow(ktYieldVal, 1/3) : undefined;
 
   useEffect(() => {
     if (inputUnit === outputUnit) setConversionOutput(conversionInput);
@@ -131,7 +132,7 @@ function App() {
         </div>
 
         <div className="divider" />
-        {!!numPerTarget && (
+        {!!numPerTarget && tkp && (
           <div className="equation">
             TKP<sub>n</sub> = 1 - p(miss)^n = {`1 - ${1-tkp}^${numPerTarget} = 1 - ${Math.pow(1-tkp, numPerTarget)} = ${tkpN}`}
             <span style={{fontWeight: 700}}>{` ≈ ${(tkpN*100).toFixed(2)}%`}</span>
@@ -141,8 +142,14 @@ function App() {
         <div className="divider" />
         {!!heightOfBurst && !!ktYieldVal && (
           <div className="equation">
-            H<sub>{ktYieldVal}-kt</sub> = H<sub>1-kt</sub>*{ktYieldVal}^1/3 = {`${heightOfBurst}*${ktYieldVal}^1/3 = ${heightOfBurst} * ${Math.pow(ktYieldVal, 1/3)} = ${scaledHeightOfBurst} ft`}
+            H<sub>{ktYieldVal}-kt</sub> = H<sub>1-kt</sub>*({ktYieldVal}^1/3) = {`${heightOfBurst}*(${ktYieldVal}^1/3) = ${heightOfBurst} * ${Math.pow(ktYieldVal, 1/3)} = ${scaledHeightOfBurst} ft`}
             <span style={{fontWeight: 700}}>{` ≈ ${(scaledHeightOfBurst/feetConversionRatio).toFixed(2)} m`}</span>
+          </div>
+        )}
+        {!!distanceFromGroundZero && !!ktYieldVal && (
+          <div className="equation">
+            D<sub>{ktYieldVal}-kt</sub> = D<sub>1-kt</sub>*({ktYieldVal}^1/3) = {`${distanceFromGroundZero}*(${ktYieldVal}^1/3) = ${distanceFromGroundZero} * ${Math.pow(ktYieldVal, 1/3)} = ${scaledDistanceFromGroundZero} ft`}
+            <span style={{fontWeight: 700}}>{` ≈ ${(scaledDistanceFromGroundZero/feetConversionRatio).toFixed(2)} m`}</span>
           </div>
         )}
       </div>
