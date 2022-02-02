@@ -20,6 +20,7 @@ function App() {
   const [conversionOutput, setConversionOutput] = useState('');
   const [inputUnit, setInputUnit] = useState('nm');
   const [outputUnit, setOutputUnit] = useState('nm');
+  const [numPerTarget, setNumPerTarget] = useState('');
 
   const onChange = (e, setter) => {
     if (isValidFloat(e.target.value)) {
@@ -34,6 +35,7 @@ function App() {
   const cepActual = cepEffective || cep;
   const sskp = mLethalRadius && cepActual ? 1 - Math.pow(0.5, Math.pow(mLethalRadius/(cepActual), 2)) : undefined;
   const tkp = sskp && reliability ? sskp * (reliability/100) : undefined;
+  const tkpN = numPerTarget ? 1 - Math.pow((1-tkp), numPerTarget) : undefined;
 
   useEffect(() => {
     if (inputUnit === outputUnit) setConversionOutput(conversionInput);
@@ -79,6 +81,11 @@ function App() {
           <label>Bias (B)</label>
           <div className="input"><input type="text" value={bias} onChange={(e) => onChange(e, setBias)} /> <div className="unit">m</div></div>
         </div>
+        <div className="divider" />
+        <div className="input-container">
+          <label>Number of missiles per target (N)</label>
+          <div className="input"><input type="text" value={numPerTarget} onChange={(e) => onChange(e, setNumPerTarget)} /> <div className="unit" /></div>
+        </div>
       </div>
 
       <div className="equations">
@@ -102,6 +109,14 @@ function App() {
           TKP = SSKP * reliability = {(sskp && reliability) && `${sskp} * ${reliability/100} = ${tkp}`}
           <span style={{fontWeight: 700}}>{(sskp && reliability) && ` ≈ ${(tkp*100).toFixed(2)}%`}</span>
         </div>
+
+        <div className="divider" />
+        {!!numPerTarget && (
+          <div className="equation">
+            TKP<sub>n</sub> = 1 - p(miss)^n = {`1 - ${1-tkp}^${numPerTarget} = 1 - ${Math.pow(1-tkp, numPerTarget)} = ${tkpN}`}
+            <span style={{fontWeight: 700}}>{` ≈ ${(tkpN*100).toFixed(2)}%`}</span>
+          </div>
+        )}
       </div>
 
       <div className="convert">
